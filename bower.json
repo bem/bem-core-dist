@@ -1,0 +1,17 @@
+{
+  "name": "bem-core-dist",
+  "description": "Core blocks for sites development with BEM",
+  "version": "2.6.0",
+  "keywords": [
+    "bem",
+    "бэм",
+    "core",
+    "css",
+    "js",
+    "front-end",
+    "framework",
+    "web"
+  ],
+  "homepage": "https://bem.info/",
+  "main": ""
+}
