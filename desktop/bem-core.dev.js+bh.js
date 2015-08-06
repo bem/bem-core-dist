@@ -4872,7 +4872,7 @@ DOM = BEM.decl('i-bem__dom',/** @lends BEMDOM.prototype */{
 
                 (oldModVal === true?
                     classRE.test(className) :
-                    className.indexOf(classPrefix + MOD_DELIM) > -1)?
+                    (' ' + className).indexOf(' ' + classPrefix + MOD_DELIM) > -1)?
                         this.className = className.replace(
                             classRE,
                             (needDel? '' : '$1' + modClassName)) :
@@ -5159,18 +5159,19 @@ DOM = BEM.decl('i-bem__dom',/** @lends BEMDOM.prototype */{
     },
 
     /**
-     * Destroys blocks on a fragment of the DOM tree
      * @param {jQuery} ctx Root DOM node
      * @param {Boolean} [excludeSelf=false] Exclude the main domElem
+     * @param {Boolean} [destructDom=false] Remove DOM node during destruction
+     * @private
      */
-    destruct : function(ctx, excludeSelf) {
+    _destruct : function(ctx, excludeSelf, destructDom) {
         var _ctx;
         if(excludeSelf) {
             storeDomNodeParents(_ctx = ctx.children());
-            ctx.empty();
+            destructDom && ctx.empty();
         } else {
             storeDomNodeParents(_ctx = ctx);
-            ctx.remove();
+            destructDom && ctx.remove();
         }
 
         reverse.call(findDomElem(_ctx, BEM_SELECTOR)).each(function(_, domNode) {
@@ -5185,9 +5186,24 @@ DOM = BEM.decl('i-bem__dom',/** @lends BEMDOM.prototype */{
             });
             delete domElemToParams[identify(domNode)];
         });
+    },
 
-        // flush parent nodes storage that has been filled above
-        domNodesToParents = {};
+    /**
+     * Destroys blocks on a fragment of the DOM tree
+     * @param {jQuery} ctx Root DOM node
+     * @param {Boolean} [excludeSelf=false] Exclude the main domElem
+     */
+    destruct : function(ctx, excludeSelf) {
+        this._destruct(ctx, excludeSelf, true);
+    },
+
+    /**
+     * Detaches blocks on a fragment of the DOM tree without destructing DOM tree
+     * @param {jQuery} ctx Root DOM node
+     * @param {Boolean} [excludeSelf=false] Exclude the main domElem
+     */
+    detach : function(ctx, excludeSelf) {
+        this._destruct(ctx, excludeSelf);
     },
 
     /**
@@ -7107,9 +7123,6 @@ $(function() {
 
 /* end: ../../common.blocks/jquery/__event/_type/jquery__event_type_pointerclick.js */
 /* begin: ../../common.blocks/jquery/__event/_type/jquery__event_type_pointernative.js */
-/*!
- * Basic pointer events polyfill
- */
 ;(function(global, factory) {
 
 if(typeof modules === 'object' && modules.isDefined('jquery')) {
@@ -7123,7 +7136,17 @@ if(typeof modules === 'object' && modules.isDefined('jquery')) {
 
 }(this, function(window, $) {
 
-// include "jquery-pointerevents.js"
+var jqEvent = $.event;
+
+// NOTE: Remove jQuery special fixes for pointerevents – we fix them ourself
+delete jqEvent.special.pointerenter;
+delete jqEvent.special.pointerleave;
+
+if(window.PointerEvent) {
+    // Have native PointerEvent support, nothing to do than
+    return;
+}
+
 /*!
  * Most of source code is taken from PointerEvents Polyfill
  * written by Polymer Team (https://github.com/Polymer/PointerEvents)
@@ -7131,17 +7154,11 @@ if(typeof modules === 'object' && modules.isDefined('jquery')) {
  */
 
 var doc = document,
-    USE_NATIVE_MAP = window.Map && window.Map.prototype.forEach,
     HAS_BITMAP_TYPE = window.MSPointerEvent && typeof window.MSPointerEvent.MSPOINTER_TYPE_MOUSE === 'number',
-    POINTERS_FN = function() { return this.size },
-    jqEvent = $.event;
-
-// NOTE: Remove jQuery special fixes for pointerevents – we fix them ourself
-delete jqEvent.special.pointerenter;
-delete jqEvent.special.pointerleave;
+    undef;
 
 /*!
- * Returns a snapshot of inEvent, with writable properties.
+ * Returns a snapshot of the event, with writable properties.
  *
  * @param {Event} event An event that contains properties to copy.
  * @returns {Object} An object containing shallow copies of `inEvent`'s
@@ -7239,68 +7256,53 @@ function PointerEvent(type, params) {
     return e;
 }
 
-/*!
- * Implements a map of pointer states
- * @returns {PointerMap}
- * @constructor
- */
-function PointerMap() {
-    if(USE_NATIVE_MAP) {
-        var m = new Map();
-        m.pointers = POINTERS_FN;
-        return m;
-    }
-
-    this.keys = [];
-    this.values = [];
+function SparseArrayMap() {
+    this.array = [];
+    this.size = 0;
 }
 
-PointerMap.prototype = {
-    set : function(id, event) {
-        var i = this.keys.indexOf(id);
-        if(i > -1) {
-            this.values[i] = event;
-        } else {
-            this.keys.push(id);
-            this.values.push(event);
+SparseArrayMap.prototype = {
+    set : function(k, v) {
+        if(v === undef) {
+            return this.delete(k);
+        }
+        if(!this.has(k)) {
+            this.size++;
+        }
+        this.array[k] = v;
+    },
+
+    has : function(k) {
+        return this.array[k] !== undef;
+    },
+
+    delete : function(k) {
+        if(this.has(k)){
+            delete this.array[k];
+            this.size--;
         }
     },
 
-    has : function(id) {
-        return this.keys.indexOf(id) > -1;
-    },
-
-    'delete' : function(id) {
-        var i = this.keys.indexOf(id);
-        if(i > -1) {
-            this.keys.splice(i, 1);
-            this.values.splice(i, 1);
-        }
-    },
-
-    get : function(id) {
-        var i = this.keys.indexOf(id);
-        return this.values[i];
+    get : function(k) {
+        return this.array[k];
     },
 
     clear : function() {
-        this.keys.length = 0;
-        this.values.length = 0;
+        this.array.length = 0;
+        this.size = 0;
     },
 
+    // return value, key, map
     forEach : function(callback, ctx) {
-        var keys = this.keys;
-        this.values.forEach(function(v, i) {
-            callback.call(ctx, v, keys[i], this);
+        return this.array.forEach(function(v, k) {
+            callback.call(ctx, v, k, this);
         }, this);
-    },
-
-    pointers : function() {
-        return this.keys.length;
     }
 };
 
-var pointermap = new PointerMap();
+// jscs:disable requireMultipleVarDecl
+var PointerMap = window.Map && window.Map.prototype.forEach? Map : SparseArrayMap,
+    pointerMap = new PointerMap();
 
 var dispatcher = {
     eventMap : {},
@@ -7544,12 +7546,12 @@ var mouseEvents = {
 
     mousedown : function(event) {
         if(!this.isEventSimulatedFromTouch(event)) {
-            if(pointermap.has(MOUSE_POINTER_ID)) {
+            if(pointerMap.has(MOUSE_POINTER_ID)) {
                 // http://crbug/149091
                 this.cancel(event);
             }
 
-            pointermap.set(MOUSE_POINTER_ID, event);
+            pointerMap.set(MOUSE_POINTER_ID, event);
 
             var e = this.prepareEvent(event);
             dispatcher.down(e);
@@ -7565,7 +7567,7 @@ var mouseEvents = {
 
     mouseup : function(event) {
         if(!this.isEventSimulatedFromTouch(event)) {
-            var p = pointermap.get(MOUSE_POINTER_ID);
+            var p = pointerMap.get(MOUSE_POINTER_ID);
             if(p && p.button === event.button) {
                 var e = this.prepareEvent(event);
                 dispatcher.up(e);
@@ -7595,7 +7597,7 @@ var mouseEvents = {
     },
 
     cleanupMouse : function() {
-        pointermap['delete'](MOUSE_POINTER_ID);
+        pointerMap['delete'](MOUSE_POINTER_ID);
     }
 };
 
@@ -7628,8 +7630,8 @@ var touchEvents = {
      * Sets primary touch if there no pointers, or the only pointer is the mouse
      */
     setPrimaryTouch : function(touch) {
-        if(pointermap.pointers() === 0 ||
-                (pointermap.pointers() === 1 && pointermap.has(MOUSE_POINTER_ID))) {
+        if(pointerMap.size === 0 ||
+                (pointerMap.size === 1 && pointerMap.has(MOUSE_POINTER_ID))) {
             this.firstTouch = touch.identifier;
             this.firstXY = { X : touch.clientX, Y : touch.clientY };
             this.scrolling = null;
@@ -7733,12 +7735,12 @@ var touchEvents = {
      */
     vacuumTouches : function(touchEvent) {
         var touches = touchEvent.touches;
-        // pointermap.pointers() should be less than length of touches here, as the touchstart has not
+        // `pointermap.size` should be less than length of touches here, as the touchstart has not
         // been processed yet.
-        if(pointermap.pointers() >= touches.length) {
+        if(pointerMap.size >= touches.length) {
             var d = [];
 
-            pointermap.forEach(function(pointer, pointerId) {
+            pointerMap.forEach(function(pointer, pointerId) {
                 // Never remove pointerId == 1, which is mouse.
                 // Touch identifiers are 2 smaller than their pointerId, which is the
                 // index in pointermap.
@@ -7818,7 +7820,7 @@ var touchEvents = {
 
     overDown : function(pEvent) {
         var target = pEvent.target;
-        pointermap.set(pEvent.pointerId, {
+        pointerMap.set(pEvent.pointerId, {
             target : target,
             outTarget : target,
             outEvent : pEvent
@@ -7829,7 +7831,7 @@ var touchEvents = {
     },
 
     moveOverOut : function(pEvent) {
-        var pointer = pointermap.get(pEvent.pointerId);
+        var pointer = pointerMap.get(pEvent.pointerId);
 
         // a finger drifted off the screen, ignore it
         if(!pointer) {
@@ -7878,7 +7880,7 @@ var touchEvents = {
     },
 
     cleanUpPointer : function(pEvent) {
-        pointermap['delete'](pEvent.pointerId);
+        pointerMap['delete'](pEvent.pointerId);
         this.removePrimaryPointer(pEvent);
     }
 };
@@ -7916,7 +7918,7 @@ var msEvents = {
     },
 
     MSPointerDown : function(event) {
-        pointermap.set(event.pointerId, event);
+        pointerMap.set(event.pointerId, event);
         var e = this.prepareEvent(event);
         dispatcher.down(e);
     },
@@ -7949,7 +7951,7 @@ var msEvents = {
     },
 
     cleanup : function(id) {
-        pointermap['delete'](id);
+        pointerMap['delete'](id);
     }
 };
 
@@ -9345,7 +9347,7 @@ bh.setOptions({
                             { tag : 'meta', attrs : { charset : 'utf-8' } },
                             json.uaCompatible === false? '' : {
                                 tag : 'meta',
-                                attrs: {
+                                attrs : {
                                     'http-equiv' : 'X-UA-Compatible',
                                     content : json.uaCompatible || 'IE=edge'
                                 }

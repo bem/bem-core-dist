@@ -1140,7 +1140,7 @@ bh.setOptions({
                             { tag : 'meta', attrs : { charset : 'utf-8' } },
                             json.uaCompatible === false? '' : {
                                 tag : 'meta',
-                                attrs: {
+                                attrs : {
                                     'http-equiv' : 'X-UA-Compatible',
                                     content : json.uaCompatible || 'IE=edge'
                                 }
