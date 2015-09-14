@@ -1,27 +1,27 @@
-# bem-core
+# bem-core-dist
 
-Страница библиотеки - https://bem.info/libs/bem-core/
+This is precompiled version of [bem-core](https://en.bem.info/libs/bem-core/) library. All the files are also available at CDN. For more info please refer to [usage documentation](https://en.bem.info/libs/bem-core/current/#use).
 
-## Состав
-Доступны отдельные наборы файлов для двух платформ:
+## Contents
+There are two sets for different platforms:
 * desktop
 * touch
 
-Каждый набор включает в себя:
-* bem-core.bemhtml.js — BEMHTML-шаблоны
-* bem-core.bh.js — BH-шаблоны
-* bem-core.css — стили
-* bem-core.dev.bemhtml.js — неминимизированные BEMHTML-шаблоны
-* bem-core.dev.bh.js — неминимизированные BH-шаблоны
-* bem-core.dev.css — неминимизированные стили
-* bem-core.dev.js — неминимизированные скрипты
-* bem-core.dev.js+bemhtml.js — неминимизированные скрипты + BEMHTML-шаблоны
-* bem-core.dev.js+bh.js — неминимизированные скрипты + BH-шаблоны
-* bem-core.js — скрипты
-* bem-core.js+bemhtml.js — скрипты + BEMHTML-шаблоны
-* bem-core.js+bh.js — скрипты + BH-шаблоны
+Each of them includes:
+* bem-core.bemhtml.js — BEMHTML templates
+* bem-core.bh.js — BH templates
+* bem-core.css — styles
+* bem-core.dev.bemhtml.js — non-minified BEMHTML templates
+* bem-core.dev.bh.js — non-minified BH templates
+* bem-core.dev.css — non-minified styles
+* bem-core.dev.js — non-minified scripts
+* bem-core.dev.js+bemhtml.js — non-minified scripts + BEMHTML templates
+* bem-core.dev.js+bh.js — non-minified scripts + BH templates
+* bem-core.js — scripts
+* bem-core.js+bemhtml.js — scripts + BEMHTML templates
+* bem-core.js+bh.js — scripts + BH templates
 
-## Пример использования
+## HTML template to use the dist with
 
 ```html
 <!DOCTYPE html>
