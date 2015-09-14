@@ -1,11 +1,14 @@
-(function(g) {
-  var __bem_xjst = function(exports) {
-     var $$mode = "", $$block = "", $$elem = "", $$elemMods = null, $$mods = null;
+(function(global) {
+var buildBemXjst = function(exports, __bem_xjst_libs__){
+if (typeof Vow === "undefined") { global.Vow = __bem_xjst_libs__.vow || __bem_xjst_libs__.Vow; }
+var $$mode = "", $$block = "", $$elem = "", $$elemMods = null, $$mods = null, $$once = false, $$wrap = false;
 
 var __$ref = {};
 
 function apply(ctx) {
     ctx = ctx || this;
+    $$wrap = undefined;
+    $$once = undefined;
     $$mods = ctx["mods"];
     $$elemMods = ctx["elemMods"];
     $$elem = ctx["elem"];
@@ -30,13 +33,13 @@ function applyc(__$ctx, __$ref) {
         var __$t = $$block;
         if (__$t === "page") {
             if ($$elem === "head" && (__$ctx.__$a0 & 8) === 0) {
-                return [ function __$lb__$17() {
-                    var __$r__$18;
-                    var __$l0__$19 = __$ctx.__$a0;
+                return [ function __$lb__$21() {
+                    var __$r__$22;
+                    var __$l0__$23 = __$ctx.__$a0;
                     __$ctx.__$a0 = __$ctx.__$a0 | 8;
-                    __$r__$18 = applyc(__$ctx, __$ref);
-                    __$ctx.__$a0 = __$l0__$19;
-                    return __$r__$18;
+                    __$r__$22 = applyc(__$ctx, __$ref);
+                    __$ctx.__$a0 = __$l0__$23;
+                    return __$r__$22;
                 }(), {
                     elem: "meta",
                     attrs: {
@@ -58,26 +61,26 @@ function applyc(__$ctx, __$ref) {
                 } ];
             }
             if (!$$elem && (__$ctx.__$a0 & 32) === 0) {
-                return [ function __$lb__$26() {
-                    var __$r__$27;
-                    var __$l0__$28 = __$ctx.__$a0;
+                return [ function __$lb__$30() {
+                    var __$r__$31;
+                    var __$l0__$32 = __$ctx.__$a0;
                     __$ctx.__$a0 = __$ctx.__$a0 | 32;
-                    __$r__$27 = applyc(__$ctx, __$ref);
-                    __$ctx.__$a0 = __$l0__$28;
-                    return __$r__$27;
+                    __$r__$31 = applyc(__$ctx, __$ref);
+                    __$ctx.__$a0 = __$l0__$32;
+                    return __$r__$31;
                 }(), __$ctx.ctx.scripts ];
             }
         } else if (__$t === "ua") {
             var __$t = !$$elem;
             if (__$t) {
                 if ((__$ctx.__$a0 & 2) === 0) {
-                    return [ function __$lb__$8() {
-                        var __$r__$9;
-                        var __$l0__$10 = __$ctx.__$a0;
+                    return [ function __$lb__$12() {
+                        var __$r__$13;
+                        var __$l0__$14 = __$ctx.__$a0;
                         __$ctx.__$a0 = __$ctx.__$a0 | 2;
-                        __$r__$9 = applyc(__$ctx, __$ref);
-                        __$ctx.__$a0 = __$l0__$10;
-                        return __$r__$9;
+                        __$r__$13 = applyc(__$ctx, __$ref);
+                        __$ctx.__$a0 = __$l0__$14;
+                        return __$r__$13;
                     }(), "(function(d,n){", "d.documentElement.className+=", '" ua_svg_"+(d[n]&&d[n]("http://www.w3.org/2000/svg","svg").createSVGRect?"yes":"no");', '})(document,"createElementNS");' ];
                 }
                 return [ "(function(e,c){", 'e[c]=e[c].replace(/(ua_js_)no/g,"$1yes");', '})(document.documentElement,"className");' ];
@@ -376,6 +379,14 @@ function applyc(__$ctx, __$ref) {
             return;
         };
     })(this, typeof BEM === "undefined" ? {} : BEM);
+}, function(exports, context) {
+    var BEMContext = exports.BEMContext || context.BEMContext;
+    if (!BEMContext) {
+        throw Error("Seems like you have no base templates from i-bem.bemhtml");
+    }
+    BEMContext.prototype.require = function(lib) {
+        return __bem_xjst_libs__[lib];
+    };
 } ].forEach(function(fn) {
     fn(exports, this);
 }, {
@@ -401,60 +412,71 @@ function applyc(__$ctx, __$ref) {
 });
 
 function __$b1(__$ctx, __$ref) {
-    var ctx__$0 = __$ctx.ctx;
-    var __$r__$2;
-    var __$l0__$3 = $$mode;
+    if (!__$ctx.ctx) return "";
+    var ctx__$0 = __$ctx.ctx, keyset__$1 = ctx__$0.keyset, key__$2 = ctx__$0.key, params__$3 = ctx__$0.params || {};
+    if (!(keyset__$1 || key__$2)) return "";
+    if (typeof ctx__$0.content === "undefined" || ctx__$0.content !== null) {
+        params__$3.content = exports.apply(ctx__$0.content);
+    }
+    __$ctx._buf.push(BEM.I18N(keyset__$1, key__$2, params__$3));
+    return;
+}
+
+function __$b2(__$ctx, __$ref) {
+    var ctx__$4 = __$ctx.ctx;
+    var __$r__$6;
+    var __$l0__$7 = $$mode;
     $$mode = "";
-    var __$l1__$4 = __$ctx.ctx;
-    __$ctx.ctx = [ ctx__$0.src16 && {
+    var __$l1__$8 = __$ctx.ctx;
+    __$ctx.ctx = [ ctx__$4.src16 && {
         elem: "link",
         attrs: {
             rel: "shortcut icon",
-            href: ctx__$0.src16
+            href: ctx__$4.src16
         }
-    }, ctx__$0.src114 && {
+    }, ctx__$4.src114 && {
         elem: "link",
         attrs: {
             rel: "apple-touch-icon-precomposed",
             sizes: "114x114",
-            href: ctx__$0.src114
+            href: ctx__$4.src114
         }
-    }, ctx__$0.src72 && {
+    }, ctx__$4.src72 && {
         elem: "link",
         attrs: {
             rel: "apple-touch-icon-precomposed",
             sizes: "72x72",
-            href: ctx__$0.src72
+            href: ctx__$4.src72
         }
-    }, ctx__$0.src57 && {
+    }, ctx__$4.src57 && {
         elem: "link",
         attrs: {
             rel: "apple-touch-icon-precomposed",
-            href: ctx__$0.src57
+            href: ctx__$4.src57
         }
     } ];
-    var __$r__$6;
-    var __$l2__$7 = __$ctx.__$a0;
+    var __$r__$10;
+    var __$l2__$11 = __$ctx.__$a0;
     __$ctx.__$a0 = __$ctx.__$a0 | 1;
-    __$r__$6 = applyc(__$ctx, __$ref);
-    __$ctx.__$a0 = __$l2__$7;
-    __$r__$2 = __$r__$6;
-    $$mode = __$l0__$3;
-    __$ctx.ctx = __$l1__$4;
-    return __$r__$2;
+    __$r__$10 = applyc(__$ctx, __$ref);
+    __$ctx.__$a0 = __$l2__$11;
+    __$r__$6 = __$r__$10;
+    $$mode = __$l0__$7;
+    __$ctx.ctx = __$l1__$8;
+    return __$r__$6;
 }
 
-function __$b3(__$ctx, __$ref) {
-    var ctx__$29 = __$ctx.ctx;
-    __$ctx._nonceCsp = ctx__$29.nonce;
-    var __$r__$31;
-    var __$l0__$32 = __$ctx._pageInit;
+function __$b4(__$ctx, __$ref) {
+    var ctx__$33 = __$ctx.ctx;
+    __$ctx._nonceCsp = ctx__$33.nonce;
+    var __$r__$35;
+    var __$l0__$36 = __$ctx._pageInit;
     __$ctx._pageInit = true;
-    var __$r__$34;
-    var __$l1__$35 = $$mode;
+    var __$r__$38;
+    var __$l1__$39 = $$mode;
     $$mode = "";
-    var __$l2__$36 = __$ctx.ctx;
-    __$ctx.ctx = [ ctx__$29.doctype || "<!DOCTYPE html>", {
+    var __$l2__$40 = __$ctx.ctx;
+    __$ctx.ctx = [ ctx__$33.doctype || "<!DOCTYPE html>", {
         tag: "html",
         cls: "ua_js_no",
         content: [ {
@@ -464,48 +486,37 @@ function __$b3(__$ctx, __$ref) {
                 attrs: {
                     charset: "utf-8"
                 }
-            }, ctx__$29.uaCompatible === false ? "" : {
+            }, ctx__$33.uaCompatible === false ? "" : {
                 tag: "meta",
                 attrs: {
                     "http-equiv": "X-UA-Compatible",
-                    content: ctx__$29.uaCompatible || "IE=edge"
+                    content: ctx__$33.uaCompatible || "IE=edge"
                 }
             }, {
                 tag: "title",
-                content: ctx__$29.title
+                content: ctx__$33.title
             }, {
                 block: "ua",
                 attrs: {
-                    nonce: ctx__$29.nonce
+                    nonce: ctx__$33.nonce
                 }
-            }, ctx__$29.head, ctx__$29.styles, ctx__$29.favicon ? {
+            }, ctx__$33.head, ctx__$33.styles, ctx__$33.favicon ? {
                 elem: "favicon",
-                url: ctx__$29.favicon
+                url: ctx__$33.favicon
             } : "" ]
-        }, ctx__$29 ]
+        }, ctx__$33 ]
     } ];
-    var __$r__$38;
-    var __$l3__$39 = __$ctx.__$a0;
+    var __$r__$42;
+    var __$l3__$43 = __$ctx.__$a0;
     __$ctx.__$a0 = __$ctx.__$a0 | 64;
-    __$r__$38 = applyc(__$ctx, __$ref);
-    __$ctx.__$a0 = __$l3__$39;
-    __$r__$34 = __$r__$38;
-    $$mode = __$l1__$35;
-    __$ctx.ctx = __$l2__$36;
-    __$r__$31 = __$r__$34;
-    __$ctx._pageInit = __$l0__$32;
-    return __$r__$31;
-}
-
-function __$b4(__$ctx, __$ref) {
-    if (!__$ctx.ctx) return "";
-    var ctx__$40 = __$ctx.ctx, keyset__$41 = ctx__$40.keyset, key__$42 = ctx__$40.key, params__$43 = ctx__$40.params || {};
-    if (!(keyset__$41 || key__$42)) return "";
-    if (typeof ctx__$40.content === "undefined" || ctx__$40.content !== null) {
-        params__$43.content = exports.apply(ctx__$40.content);
-    }
-    __$ctx._buf.push(BEM.I18N(keyset__$41, key__$42, params__$43));
-    return;
+    __$r__$42 = applyc(__$ctx, __$ref);
+    __$ctx.__$a0 = __$l3__$43;
+    __$r__$38 = __$r__$42;
+    $$mode = __$l1__$39;
+    __$ctx.ctx = __$l2__$40;
+    __$r__$35 = __$r__$38;
+    __$ctx._pageInit = __$l0__$36;
+    return __$r__$35;
 }
 
 function __$b5(__$ctx, __$ref) {
@@ -641,7 +652,7 @@ function __$b5(__$ctx, __$ref) {
         $$mode = __$l10__$90;
         var content__$88 = __$r__$89;
         if (content__$88 || content__$88 === 0) {
-            __$ctx._resetApplyNext(__$ctx);
+            __$ctx._resetApplyNext(__$wrapThis(__$ctx));
             isBEM__$46 = vBlock__$52 || $$elem;
             var __$r__$91;
             var __$l11__$92 = $$mode;
@@ -671,31 +682,31 @@ function __$b5(__$ctx, __$ref) {
 }
 
 function __$b13(__$ctx, __$ref) {
-    var attrs__$11 = {};
+    var attrs__$15 = {};
     if (__$ctx.ctx.url) {
-        attrs__$11.src = __$ctx.ctx.url;
+        attrs__$15.src = __$ctx.ctx.url;
     } else if (__$ctx._nonceCsp) {
-        attrs__$11.nonce = __$ctx._nonceCsp;
+        attrs__$15.nonce = __$ctx._nonceCsp;
     }
-    return attrs__$11;
+    return attrs__$15;
 }
 
 function __$b35(__$ctx, __$ref) {
-    var mix__$12 = function __$lb__$13() {
-        var __$r__$14;
-        var __$l0__$15 = __$ctx.__$a0;
+    var mix__$16 = function __$lb__$17() {
+        var __$r__$18;
+        var __$l0__$19 = __$ctx.__$a0;
         __$ctx.__$a0 = __$ctx.__$a0 | 4;
-        __$r__$14 = applyc(__$ctx, __$ref);
-        __$ctx.__$a0 = __$l0__$15;
-        return __$r__$14;
-    }(), uaMix__$16 = [ {
+        __$r__$18 = applyc(__$ctx, __$ref);
+        __$ctx.__$a0 = __$l0__$19;
+        return __$r__$18;
+    }(), uaMix__$20 = [ {
         block: "ua",
         attrs: {
             nonce: __$ctx._nonceCsp
         },
         js: true
     } ];
-    return mix__$12 ? uaMix__$16.concat(mix__$12) : uaMix__$16;
+    return mix__$16 ? uaMix__$20.concat(mix__$16) : uaMix__$20;
 }
 
 function __$b38(__$ctx, __$ref) {
@@ -780,54 +791,68 @@ function __$b42(__$ctx, __$ref) {
 
 function __$g0(__$ctx, __$ref) {
     var __$t = $$block;
-    if (__$t === "page") {
-        if ($$elem === "icon" && (__$ctx.__$a0 & 1) === 0) {
+    if (__$t === "i-bem") {
+        if ($$elem === "i18n") {
             var __$r = __$b1(__$ctx, __$ref);
+            if (__$r !== __$ref) return __$r;
+        }
+    } else if (__$t === "page") {
+        if ($$elem === "icon" && (__$ctx.__$a0 & 1) === 0) {
+            var __$r = __$b2(__$ctx, __$ref);
             if (__$r !== __$ref) return __$r;
         }
         var __$t = !$$elem;
         if (__$t) {
             if ((__$ctx.__$a0 & 16) === 0) {
-                var __$r__$21;
-                var __$l0__$22 = __$ctx._zoom;
+                var __$r__$25;
+                var __$l0__$26 = __$ctx._zoom;
                 __$ctx._zoom = __$ctx.ctx.zoom;
-                var __$r__$24;
-                var __$l1__$25 = __$ctx.__$a0;
+                var __$r__$28;
+                var __$l1__$29 = __$ctx.__$a0;
                 __$ctx.__$a0 = __$ctx.__$a0 | 16;
-                __$r__$24 = applyc(__$ctx, __$ref);
-                __$ctx.__$a0 = __$l1__$25;
-                __$r__$21 = __$r__$24;
-                __$ctx._zoom = __$l0__$22;
-                var __$r = __$r__$21;
+                __$r__$28 = applyc(__$ctx, __$ref);
+                __$ctx.__$a0 = __$l1__$29;
+                __$r__$25 = __$r__$28;
+                __$ctx._zoom = __$l0__$26;
+                var __$r = __$r__$25;
                 if (__$r !== __$ref) return __$r;
             }
             if (!__$ctx._pageInit && (__$ctx.__$a0 & 64) === 0) {
-                var __$r = __$b3(__$ctx, __$ref);
+                var __$r = __$b4(__$ctx, __$ref);
                 if (__$r !== __$ref) return __$r;
             }
-        }
-    } else if (__$t === "i-bem") {
-        if ($$elem === "i18n") {
-            var __$r = __$b4(__$ctx, __$ref);
-            if (__$r !== __$ref) return __$r;
         }
     }
     var __$r = __$b5(__$ctx, __$ref);
     if (__$r !== __$ref) return __$r;
     return __$ref;
+}
+
+function __$wrapThis(ctx) {
+    ctx._mode = $$mode;
+    ctx.block = $$block;
+    ctx.elem = $$elem;
+    ctx.elemMods = $$elemMods;
+    ctx.mods = $$mods;
+    return ctx;
+}
+
+
+    return exports;
 };
-     return exports;
-  }
-  var defineAsGlobal = true;
-  if(typeof exports === "object") {
-    exports["BEMHTML"] = __bem_xjst({});
+
+var defineAsGlobal = true;
+if(typeof module === "object" && typeof module.exports === "object") {
+    exports["BEMHTML"] = buildBemXjst({}, {});
     defineAsGlobal = false;
-  }
-  if(typeof modules === "object") {
-    modules.define("BEMHTML",
-      function(provide) {
-        provide(__bem_xjst({})) });
+}
+if(typeof modules === "object") {
+    modules.define("BEMHTML", [], function(provide) {
+        provide(buildBemXjst({}, {}));
+    });
     defineAsGlobal = false;
-  }
-  defineAsGlobal && (g["BEMHTML"] = __bem_xjst({}));
+}
+if(defineAsGlobal) {
+    global["BEMHTML"] = buildBemXjst({}, {});
+}
 })(this);
