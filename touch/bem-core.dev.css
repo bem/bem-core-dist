@@ -1,10 +1,7 @@
-/* ../../common.blocks/clearfix/clearfix.css: begin */ /**/
-    .clearfix:after
-    {
-        display: table;
-        clear: both;
-    
-        content: '';
-    }
-    
-/* ../../common.blocks/clearfix/clearfix.css: end */ /**/
+.clearfix:after
+{
+    display: table;
+    clear: both;
+
+    content: '';
+}

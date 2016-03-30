@@ -6,7 +6,7 @@
  * http://www.opensource.org/licenses/mit-license.php
  * http://www.gnu.org/licenses/gpl.html
  *
- * @version 0.1.0
+ * @version 0.1.2
  */
 
 (function(global) {
@@ -123,6 +123,20 @@ var undef,
                 }
             },
 
+            getStat = function() {
+                var res = {},
+                    module;
+
+                for(var name in modulesStorage) {
+                    if(modulesStorage.hasOwnProperty(name)) {
+                        module = modulesStorage[name];
+                        (res[module.decl.state] || (res[module.decl.state] = [])).push(name);
+                    }
+                }
+
+                return res;
+            },
+
             onNextTick = function() {
                 waitForNextTick = false;
                 applyRequires();
@@ -146,6 +160,21 @@ var undef,
                 }
 
                 var decls = [],
+                    onDeclResolved = function(_, error) {
+                        if(error) {
+                            cb(null, error);
+                            return;
+                        }
+
+                        if(!--unresolvedDepsCnt) {
+                            var exports = [],
+                                i = 0, decl;
+                            while(decl = decls[i++]) {
+                                exports.push(decl.exports);
+                            }
+                            cb(exports);
+                        }
+                    },
                     i = 0, len = unresolvedDepsCnt,
                     dep, decl;
 
@@ -163,33 +192,9 @@ var undef,
                         decl = dep;
                     }
 
-                    if(decl.state === DECL_STATES.IN_RESOLVING &&
-                            curOptions.trackCircularDependencies &&
-                            isDependenceCircular(decl, path)) {
-                        cb(null, buildCircularDependenceError(decl, path));
-                        return;
-                    }
-
                     decls.push(decl);
 
-                    startDeclResolving(
-                        decl,
-                        path,
-                        function(_, error) {
-                            if(error) {
-                                cb(null, error);
-                                return;
-                            }
-
-                            if(!--unresolvedDepsCnt) {
-                                var exports = [],
-                                    i = 0, decl;
-                                while(decl = decls[i++]) {
-                                    exports.push(decl.exports);
-                                }
-                                cb(exports);
-                            }
-                        });
+                    startDeclResolving(decl, path, onDeclResolved);
                 }
             },
 
@@ -198,13 +203,14 @@ var undef,
                     cb(decl.exports);
                     return;
                 }
-                else {
-                    decl.dependents.push(cb);
-                }
-
-                if(decl.state === DECL_STATES.IN_RESOLVING) {
+                else if(decl.state === DECL_STATES.IN_RESOLVING) {
+                    curOptions.trackCircularDependencies && isDependenceCircular(decl, path)?
+                        cb(null, buildCircularDependenceError(decl, path)) :
+                        decl.dependents.push(cb);
                     return;
                 }
+
+                decl.dependents.push(cb);
 
                 if(decl.prev && !curOptions.allowMultipleDeclarations) {
                     provideError(decl, buildMultipleDeclarationError(decl));
@@ -278,7 +284,8 @@ var undef,
             require    : require,
             getState   : getState,
             isDefined  : isDefined,
-            setOptions : setOptions
+            setOptions : setOptions,
+            getStat    : getStat
         };
     },
 
@@ -408,8 +415,8 @@ else {
     global.modules = create();
 }
 
-})(this);
-if(typeof module !== 'undefined') {modules = module.exports;}
+})(typeof window !== 'undefined' ? window : global);
+
 /* begin: ../../common.blocks/cookie/cookie.js */
 /**
  * @module cookie
@@ -622,7 +629,7 @@ provide(/** @exports */{
      * URL for loading jQuery if it does not exist
      * @type {String}
      */
-    url : 'https://yastatic.net/jquery/2.1.4/jquery.min.js'
+    url : 'https://yastatic.net/jquery/2.2.0/jquery.min.js'
 });
 
 });
@@ -3041,7 +3048,7 @@ DOM = BEM.decl('i-bem__dom',/** @lends BEMDOM.prototype */{
      * Sets a modifier for a block/nested element
      * @param {jQuery} [elem] Nested element
      * @param {String} modName Modifier name
-     * @param {String} modVal Modifier value
+     * @param {String|Boolean} [modVal=true] Modifier value
      * @returns {BEMDOM} this
      */
     setMod : function(elem, modName, modVal) {
@@ -3948,7 +3955,7 @@ DOM = BEM.decl('i-bem__dom',/** @lends BEMDOM.prototype */{
 /**
  * Returns a block on a DOM element and initializes it if necessary
  * @param {String} blockName Block name
- * @param {Object} params Block parameters
+ * @param {Object} [params] Block parameters
  * @returns {BEMDOM}
  */
 $.fn.bem = function(blockName, params) {
@@ -8310,20 +8317,17 @@ modules.define('jquery', function(provide, $) {
 $.each({
     pointerpress : 'pointerdown',
     pointerrelease : 'pointerup pointercancel'
-}, function(spec, origEvent) {
+}, function(fix, origEvent) {
     function eventHandler(e) {
-        var res, origType = e.handleObj.origType;
-
         if(e.which === 1) {
-            e.type = spec;
-            res = $.event.dispatch.apply(this, arguments);
-            e.type = origType;
+            var fixedEvent = cloneEvent(e);
+            fixedEvent.type = fix;
+            fixedEvent.originalEvent = e;
+            return $.event.dispatch.call(this, fixedEvent);
         }
-
-        return res;
     }
 
-    $.event.special[spec] = {
+    $.event.special[fix] = {
         setup : function() {
             $(this).on(origEvent, eventHandler);
             return false;
@@ -8334,6 +8338,16 @@ $.each({
         }
     };
 });
+
+function cloneEvent(event) {
+    var eventCopy = $.extend(new $.Event(), event);
+    if(event.preventDefault) {
+        eventCopy.preventDefault = function() {
+            event.preventDefault();
+        };
+    }
+    return eventCopy;
+}
 
 provide($);
 
@@ -8373,6 +8387,64 @@ provide(inherit(Collection, null, /** @lends BEMDOMCollection */{
 });
 
 /* end: ../../common.blocks/i-bem/__collection/_type/i-bem__collection_type_dom.js */
+
+
+(function (global) {
+    var __i18n__ = ((function () {
+            var data;
+
+            /**
+             * @exports
+             * @param {String} keyset
+             * @param {String} key
+             * @param {Object} [params]
+             * @returns {String}
+             */
+            function i18n(keyset, key, params) {
+                if(!data) throw Error('i18n need to be filled with data');
+                var val = data[keyset] && data[keyset][key];
+                return typeof val === 'undefined'?
+                keyset + ':' + key :
+                    typeof val === 'string'?
+                        val :
+                        val.call(i18n, params, i18n);
+            }
+
+            i18n.decl = function(i18nData) {
+                if(!data) {
+                    data = i18nData;
+                    return this;
+                }
+
+                for(var ks in i18nData) {
+                    var dataKs = data[ks] || (data[ks] = {}),
+                        i18nDataKs = i18nData[ks];
+
+                    for(var k in i18nDataKs)
+                        dataKs[k] = i18nDataKs[k];
+                }
+
+                return this;
+            };
+
+            return i18n;
+        })()).decl({}),
+        defineAsGlobal = true;
+
+
+    // YModules
+    if (typeof modules === "object") {
+        modules.define("i18n", function (provide) {
+            provide(__i18n__);
+        });
+
+    }
+
+    if (defineAsGlobal) {
+
+        (global.BEM || (global.BEM = {})).I18N = __i18n__;
+    }
+})(typeof window !== "undefined" ? window : global);
 (function (global) {
 var BH = (function() {
 
@@ -9811,4 +9883,4 @@ if (defineAsGlobal) {
     global["bh"] = bh;
     global["BEMHTML"] = bh;
 }
-}(this));
+}(typeof window !== "undefined" ? window : global));

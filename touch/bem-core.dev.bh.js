@@ -1436,4 +1436,4 @@ if (defineAsGlobal) {
     global["bh"] = bh;
     global["BEMHTML"] = bh;
 }
-}(this));
+}(typeof window !== "undefined" ? window : global));
