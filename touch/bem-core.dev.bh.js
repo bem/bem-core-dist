@@ -1242,7 +1242,7 @@ var init = function (global, BH) {
                         content : 'width=device-width,' +
                             (ctx.tParam('zoom')?
                                 'initial-scale=1' :
-                                'maximum-scale=1,initial-scale=1,user-scalable=0')
+                                'maximum-scale=1,initial-scale=1,user-scalable=no')
                     }
                 },
                 { elem : 'meta', attrs : { name : 'format-detection', content : 'telephone=no' } },

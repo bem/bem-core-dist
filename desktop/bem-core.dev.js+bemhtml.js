@@ -5449,7 +5449,7 @@ function SparseArrayMap() {
 SparseArrayMap.prototype = {
     set : function(k, v) {
         if(v === undef) {
-            return this.delete(k);
+            return this['delete'](k);
         }
         if(!this.has(k)) {
             this.size++;
@@ -5461,7 +5461,7 @@ SparseArrayMap.prototype = {
         return this.array[k] !== undef;
     },
 
-    delete : function(k) {
+    'delete' : function(k) {
         if(this.has(k)){
             delete this.array[k];
             this.size--;
@@ -8385,7 +8385,7 @@ Entity.prototype.defaultBody = function defaultBody(context) {
                              content);
 };
 
-},{"../bemxjst/entity":5,"../bemxjst/match":7,"inherits":10}],2:[function(require,module,exports){
+},{"../bemxjst/entity":5,"../bemxjst/match":8,"inherits":11}],2:[function(require,module,exports){
 var inherits = require('inherits');
 var utils = require('../bemxjst/utils');
 var Entity = require('./entity').Entity;
@@ -8396,6 +8396,8 @@ function BEMHTML(options) {
 
   var xhtml = typeof options.xhtml === 'undefined' ? true : options.xhtml;
   this._shortTagCloser = xhtml ? '/>' : '>';
+
+  this._elemJsInstances = options.elemJsInstances;
 }
 
 inherits(BEMHTML, BEMXJST);
@@ -8483,7 +8485,12 @@ BEMHTML.prototype.render = function render(context,
   if (cls === undefined)
     cls = ctx.cls;
 
-  var addJSInitClass = entity.block && jsParams && !entity.elem;
+  var addJSInitClass = jsParams && (
+    this._elemJsInstances ?
+      (entity.block || entity.elem) :
+      (entity.block && !entity.elem)
+  );
+
   if (!isBEM && !cls) {
     return this.renderClose(out, context, tag, attrs, isBEM, ctx, content);
   }
@@ -8721,7 +8728,7 @@ BEMHTML.prototype.renderNoTag = function renderNoTag(context,
   return '';
 };
 
-},{"../bemxjst":6,"../bemxjst/utils":9,"./entity":1,"inherits":10}],3:[function(require,module,exports){
+},{"../bemxjst":7,"../bemxjst/utils":10,"./entity":1,"inherits":11}],3:[function(require,module,exports){
 function ClassBuilder(options) {
   this.modDelim = options.mod || '_';
   this.elemDelim = options.elem || '__';
@@ -8783,6 +8790,9 @@ function Context(bemxjst) {
   this._listLength = 0;
   this._notNewList = false;
 
+  // (miripiruni) this will be changed in next major release
+  this.escapeContent = bemxjst.options.escapeContent === true;
+
   // Used in `OnceMatch` check to detect context change
   this._onceRef = {};
 }
@@ -8817,7 +8827,7 @@ Context.prototype.reapply = function reapply(ctx) {
   return this._bemxjst.run(ctx);
 };
 
-},{"./utils":9}],5:[function(require,module,exports){
+},{"./utils":10}],5:[function(require,module,exports){
 var utils = require('./utils');
 var Match = require('./match').Match;
 var tree = require('./tree');
@@ -8940,7 +8950,23 @@ Entity.prototype.setDefaults = function setDefaults() {
   }
 };
 
-},{"./match":7,"./tree":8,"./utils":9}],6:[function(require,module,exports){
+},{"./match":8,"./tree":9,"./utils":10}],6:[function(require,module,exports){
+function BEMXJSTError(msg, func) {
+  this.name = 'BEMXJSTError';
+  this.message = msg;
+
+  if (Error.captureStackTrace)
+    Error.captureStackTrace(this, func || this.constructor);
+  else
+    this.stack = (new Error()).stack;
+}
+
+BEMXJSTError.prototype = Object.create(Error.prototype);
+BEMXJSTError.prototype.constructor = BEMXJSTError;
+
+exports.BEMXJSTError = BEMXJSTError;
+
+},{}],7:[function(require,module,exports){
 var inherits = require('inherits');
 
 var Tree = require('./tree').Tree;
@@ -9099,9 +9125,42 @@ BEMXJST.prototype.groupEntities = function groupEntities(tree) {
       j--;
     }
 
-    // TODO(indutny): print out the template itself
-    if (block === null)
-      throw new Error('block("...") not found in one of the templates');
+    if (block === null) {
+      var msg = 'block(…) subpredicate is not found.\n' +
+      '    See template with subpredicates:\n     * ';
+
+      for (var j = 0; j < template.predicates.length; j++) {
+        var pred = template.predicates[j];
+
+        if (j !== 0)
+          msg += '\n     * ';
+
+        if (pred.key === '_mode') {
+          msg += pred.value + '()';
+        } else {
+          if (Array.isArray(pred.key)) {
+            msg += pred.key[0].replace('mods', 'mod')
+              .replace('elemMods', 'elemMod') +
+              '(\'' + pred.key[1] + '\', \'' + pred.value + '\')';
+          } else if (!pred.value || !pred.key) {
+            msg += 'match(…)';
+          } else {
+            msg += pred.key + '(\'' + pred.value + '\')';
+          }
+        }
+      }
+
+      msg += '\n    And template body: \n    (' +
+        (typeof template.body === 'function' ?
+          template.body :
+          JSON.stringify(template.body)) + ')';
+
+      if (typeof BEMXJSTError === 'undefined') {
+        BEMXJSTError = require('./error').BEMXJSTError;
+      }
+
+      throw new BEMXJSTError(msg);
+    }
 
     var key = this.classBuilder.build(block, elem);
 
@@ -9186,6 +9245,16 @@ BEMXJST.prototype._run = function _run(context) {
     res = this.runMany(context);
   else if (utils.isSimple(context))
     res = this.runSimple(context);
+  else if (
+    context.html &&
+    typeof context.html === 'string' &&
+    typeof context.block === 'undefined' &&
+    typeof context.elem === 'undefined' &&
+    typeof context.tag === 'undefined' &&
+    typeof context.cls === 'undefined' &&
+    typeof context.attrs === 'undefined'
+  )
+    res = this.runUnescaped(context.html);
   else
     res = this.runOne(context);
   return res;
@@ -9216,11 +9285,19 @@ BEMXJST.prototype.runEmpty = function runEmpty() {
   return '';
 };
 
-BEMXJST.prototype.runSimple = function runSimple(context) {
+BEMXJST.prototype.runUnescaped = function runUnescaped(context) {
+  this.context._listLength--;
+  return '' + context;
+};
+
+BEMXJST.prototype.runSimple = function runSimple(simple) {
   this.context._listLength--;
   var res = '';
-  if (context && context !== true || context === 0)
-    res += context;
+  if (simple && simple !== true || simple === 0) {
+    res += typeof simple === 'string' && this.context.escapeContent ?
+      utils.xmlEscape(simple) :
+      simple;
+  }
   return res;
 };
 
@@ -9402,7 +9479,7 @@ BEMXJST.prototype.exportApply = function exportApply(exports) {
   }
 };
 
-},{"./class-builder":3,"./context":4,"./tree":8,"./utils":9,"inherits":10}],7:[function(require,module,exports){
+},{"./class-builder":3,"./context":4,"./error":6,"./tree":9,"./utils":10,"inherits":11}],8:[function(require,module,exports){
 var utils = require('./utils');
 var tree = require('./tree');
 var PropertyMatch = tree.PropertyMatch;
@@ -9665,7 +9742,7 @@ Match.prototype.restoreDepth = function restoreDepth(depth) {
   this.depth = depth;
 };
 
-},{"./tree":8,"./utils":9}],8:[function(require,module,exports){
+},{"./tree":9,"./utils":10}],9:[function(require,module,exports){
 var assert = require('minimalistic-assert');
 var inherits = require('inherits');
 
@@ -9736,7 +9813,7 @@ WrapMatch.prototype.wrapBody = function wrapBody(body) {
   }
 
   return function wrapAdaptor() {
-    return applyCtx(body.call(this));
+    return applyCtx(body.call(this, this, this.ctx));
   };
 };
 
@@ -9758,7 +9835,7 @@ ReplaceMatch.prototype.wrapBody = function wrapBody(body) {
   }
 
   return function replaceAdaptor() {
-    return applyCtx(body.call(this));
+    return applyCtx(body.call(this, this, this.ctx));
   };
 };
 
@@ -10063,7 +10140,7 @@ Tree.prototype.oninit = function oninit(fn) {
   this.initializers.push(fn);
 };
 
-},{"inherits":10,"minimalistic-assert":11}],9:[function(require,module,exports){
+},{"inherits":11,"minimalistic-assert":12}],10:[function(require,module,exports){
 var toString = Object.prototype.toString;
 
 exports.isArray = Array.isArray;
@@ -10141,7 +10218,7 @@ exports.identify = function identify(obj, onlyGet) {
   return u;
 };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -10166,7 +10243,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 module.exports = assert;
 
 function assert(val, msg) {
@@ -10188,7 +10265,7 @@ assert.equal = function assertEqual(l, r, msg) {
 /// --------- BEM-XJST Runtime End ------
 /// -------------------------------------
 
-var api = new BEMHTML({"wrap":false});
+var api = new BEMHTML({});
 /// -------------------------------------
 /// ------ BEM-XJST User-code Start -----
 /// -------------------------------------
@@ -10482,4 +10559,4 @@ api.exportApply(exports);
 );
         global['BEMHTML'] = BEMHTML;
     }
-})(typeof window !== "undefined" ? window : global);
+})(typeof window !== "undefined" ? window : global || this);
