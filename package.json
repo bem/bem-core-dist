@@ -1,0 +1,21 @@
+{
+  "name": "bem-core-dist",
+  "version": "3.0.1",
+  "description": "bem-core library",
+  "main": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bem/bem-core-dist.git"
+  },
+  "keywords": [
+    "bem",
+    "blocks",
+    "components",
+    "ui"
+  ],
+  "license": "MPL-2.0",
+  "bugs": {
+    "url": "https://github.com/bem/bem-core-dist/issues"
+  },
+  "homepage": "https://bem.info/libs/bem-core/"
+}

@@ -1,7 +1,6 @@
 {
   "name": "bem-core-dist",
   "description": "Core blocks for sites development with BEM",
-  "version": "2.9.1",
   "keywords": [
     "bem",
     "бэм",
@@ -12,6 +11,6 @@
     "framework",
     "web"
   ],
-  "homepage": "https://bem.info/",
+  "homepage": "https://bem.info/libs/bem-core/",
   "main": ""
 }

@@ -228,10 +228,11 @@ BEMHTML.prototype.render = function render(context,
     }
 
     if (cls)
-      out += ' ' + cls;
+      out += ' ' + (typeof cls === 'string' ?
+                    utils.attrEscape(cls).trim() : cls);
   } else {
     if (cls)
-      out += cls;
+      out += cls.trim ? utils.attrEscape(cls).trim() : cls;
   }
 
   if (addJSInitClass)
@@ -256,10 +257,10 @@ BEMHTML.prototype.renderClose = function renderClose(prefix,
 
   // NOTE: maybe we need to make an array for quicker serialization
   attrs = utils.extend(attrs, ctx.attrs);
-  if (attrs) {
-    var name; // TODO: do something with OmetaJS and YUI Compressor
+  if (attrs && typeof attrs === 'object' && !Array.isArray(attrs) &&
+      attrs !== null) {
     /* jshint forin : false */
-    for (name in attrs) {
+    for (var name in attrs) {
       var attr = attrs[name];
       if (attr === undefined || attr === false || attr === null)
         continue;
@@ -1032,7 +1033,7 @@ BEMXJST.prototype.runOne = function runOne(json) {
 
     if (json.mods)
       context.mods = json.mods;
-    else
+    else if (json.block !== oldBlock || !json.elem)
       context.mods = {};
   } else {
     if (!json.elem)
@@ -1284,8 +1285,8 @@ function MatchTemplate(mode, template) {
     } else if (pred instanceof CustomMatch) {
       this.predicates[j] = new MatchCustom(this, pred);
 
-    // Push OnceMatch and MatchWrap later, they should not be executed first.
-    // Otherwise they will set flag too early, and body might not be executed
+      // Push OnceMatch and MatchWrap later, they should not be executed first.
+      // Otherwise they will set flag too early, and body might not be executed
     } else if (pred instanceof OnceMatch) {
       j--;
       postpone.push(new MatchOnce(this));
@@ -1641,7 +1642,7 @@ function Tree(options) {
 exports.Tree = Tree;
 
 Tree.methods = [
-  'match', 'once', 'wrap', 'elemMatch', 'block', 'elem', 'mode', 'mod',
+  'match', 'once', 'wrap', 'block', 'elem', 'mode', 'mod',
   'elemMod', 'def', 'tag', 'attrs', 'cls', 'js',
   'bem', 'mix', 'content', 'replace', 'extend', 'oninit',
   'xjstOptions'
@@ -1784,10 +1785,6 @@ Tree.prototype.xjstOptions = function xjstOptions(options) {
 
 Tree.prototype.block = function block(name) {
   return this.match(new PropertyMatch('block', name));
-};
-
-Tree.prototype.elemMatch = function elemMatch() {
-  return this.match.apply(this, arguments);
 };
 
 Tree.prototype.elem = function elem(name) {
@@ -1979,8 +1976,8 @@ var api = new BEMHTML({});
 /// -------------------------------------
 /// ------ BEM-XJST User-code Start -----
 /// -------------------------------------
-api.compile(function(match, once, wrap, elemMatch, block, elem, mode, mod, elemMod, def, tag, attrs, cls, js, bem, mix, content, replace, extend, oninit, xjstOptions, local, applyCtx, applyNext, apply) {
-/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/ua/ua.bemhtml */
+api.compile(function(match, once, wrap, block, elem, mode, mod, elemMod, def, tag, attrs, cls, js, bem, mix, content, replace, extend, oninit, xjstOptions, local, applyCtx, applyNext, apply) {
+/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/ua/ua.bemhtml.js */
 block('ua')(
     tag()('script'),
     bem()(false),
@@ -1991,45 +1988,42 @@ block('ua')(
     ])
 );
 
-/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/ua/ua.bemhtml */
-/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/page.bemhtml */
+/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/ua/ua.bemhtml.js */
+/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/page.bemhtml.js */
 block('page')(
 
-    def().match(function() { return !this._pageInit; })(function() {
+    wrap()(function() {
         var ctx = this.ctx;
         this._nonceCsp = ctx.nonce;
 
-        // TODO(indunty): remove local after bem/bem-xjst#50
-        return local({ _pageInit : true })(function() {
-            return applyCtx([
-                ctx.doctype || '<!DOCTYPE html>',
-                {
-                    tag : 'html',
-                    cls : 'ua_js_no',
-                    content : [
-                        {
-                            elem : 'head',
-                            content : [
-                                { tag : 'meta', attrs : { charset : 'utf-8' } },
-                                ctx.uaCompatible === false? '' : {
-                                    tag : 'meta',
-                                    attrs : {
-                                        'http-equiv' : 'X-UA-Compatible',
-                                        content : ctx.uaCompatible || 'IE=edge'
-                                    }
-                                },
-                                { tag : 'title', content : ctx.title },
-                                { block : 'ua', attrs : { nonce : ctx.nonce } },
-                                ctx.head,
-                                ctx.styles,
-                                ctx.favicon? { elem : 'favicon', url : ctx.favicon } : ''
-                            ]
-                        },
-                        ctx
-                    ]
-                }
-            ]);
-        });
+        return [
+            ctx.doctype || '<!DOCTYPE html>',
+            {
+                tag : 'html',
+                cls : 'ua_js_no',
+                content : [
+                    {
+                        elem : 'head',
+                        content : [
+                            { tag : 'meta', attrs : { charset : 'utf-8' } },
+                            ctx.uaCompatible === false? '' : {
+                                tag : 'meta',
+                                attrs : {
+                                    'http-equiv' : 'X-UA-Compatible',
+                                    content : ctx.uaCompatible || 'IE=edge'
+                                }
+                            },
+                            { tag : 'title', content : ctx.title },
+                            { block : 'ua', attrs : { nonce : ctx.nonce } },
+                            ctx.head,
+                            ctx.styles,
+                            ctx.favicon? { elem : 'favicon', url : ctx.favicon } : ''
+                        ]
+                    },
+                    ctx
+                ]
+            }
+        ];
     }),
 
     tag()('body'),
@@ -2064,8 +2058,8 @@ block('page')(
 
 );
 
-/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/page.bemhtml */
-/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/__css/page__css.bemhtml */
+/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/page.bemhtml.js */
+/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/__css/page__css.bemhtml.js */
 block('page').elem('css')(
     bem()(false),
     tag()('style'),
@@ -2075,8 +2069,8 @@ block('page').elem('css')(
     )
 );
 
-/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/__css/page__css.bemhtml */
-/* begin: /Users/tadatuta/projects/bem/bem-core/desktop.blocks/page/__css/page__css.bemhtml */
+/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/__css/page__css.bemhtml.js */
+/* begin: /Users/tadatuta/projects/bem/bem-core/desktop.blocks/page/__css/page__css.bemhtml.js */
 block('page').elem('css').match(function() {
     return this.ctx.hasOwnProperty('ie');
 })(
@@ -2102,8 +2096,8 @@ block('page').elem('css').match(function() {
     })
 );
 
-/* end: /Users/tadatuta/projects/bem/bem-core/desktop.blocks/page/__css/page__css.bemhtml */
-/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/__js/page__js.bemhtml */
+/* end: /Users/tadatuta/projects/bem/bem-core/desktop.blocks/page/__css/page__css.bemhtml.js */
+/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/__js/page__js.bemhtml.js */
 block('page').elem('js')(
     bem()(false),
     tag()('script'),
@@ -2119,8 +2113,8 @@ block('page').elem('js')(
     })
 );
 
-/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/__js/page__js.bemhtml */
-/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/ua/__svg/ua__svg.bemhtml */
+/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/page/__js/page__js.bemhtml.js */
+/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/ua/__svg/ua__svg.bemhtml.js */
 block('ua').content()(function() {
     return [
         applyNext(),
@@ -2131,8 +2125,8 @@ block('ua').content()(function() {
     ];
 });
 
-/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/ua/__svg/ua__svg.bemhtml */
-/* begin: /Users/tadatuta/projects/bem/bem-core/desktop.blocks/page/__conditional-comment/page__conditional-comment.bemhtml */
+/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/ua/__svg/ua__svg.bemhtml.js */
+/* begin: /Users/tadatuta/projects/bem/bem-core/desktop.blocks/page/__conditional-comment/page__conditional-comment.bemhtml.js */
 block('page').elem('conditional-comment')(
     tag()(false),
 
@@ -2157,61 +2151,7 @@ block('page').elem('conditional-comment')(
     })
 );
 
-/* end: /Users/tadatuta/projects/bem/bem-core/desktop.blocks/page/__conditional-comment/page__conditional-comment.bemhtml */
-/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/i-bem/__i18n/i-bem__i18n.bemhtml */
-/* global exports, BEM */
-
-block('i-bem').elem('i18n').def()(function() {
-    if(!this.ctx) return '';
-
-    var ctx = this.ctx,
-        keyset = ctx.keyset,
-        key = ctx.key,
-        params = ctx.params || {};
-
-    if(!(keyset || key))
-        return '';
-
-    /**
-     * Consider `content` is a reserved param that contains
-     * valid bemjson data
-     */
-    if(typeof ctx.content === 'undefined' || ctx.content !== null) {
-        params.content = exports.apply(ctx.content);
-    }
-
-    this._buf.push(BEM.I18N(keyset, key, params));
-});
-
-/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/i-bem/__i18n/i-bem__i18n.bemhtml */
-/* begin: /Users/tadatuta/projects/bem/bem-core/common.blocks/i-bem/__i18n/_dummy/i-bem__i18n_dummy_yes.bemhtml */
-/*global oninit, BEM, exports */
-
-oninit(function() {
-    (function(global, bem_) {
-
-        if(bem_.I18N) {
-            return;
-        }
-
-        /** @global points to global context */
-        global.BEM = bem_;
-
-        /**
-        * `BEM.I18N` API stub
-        */
-        var i18n = global.BEM.I18N = function(keyset, key) {
-            return key;
-        };
-
-        i18n.keyset = function() { return i18n; };
-        i18n.key = function(key) { return key; };
-        i18n.lang = function() { return; };
-
-    })(this, typeof BEM === 'undefined'? {} : BEM);
-});
-
-/* end: /Users/tadatuta/projects/bem/bem-core/common.blocks/i-bem/__i18n/_dummy/i-bem__i18n_dummy_yes.bemhtml */
+/* end: /Users/tadatuta/projects/bem/bem-core/desktop.blocks/page/__conditional-comment/page__conditional-comment.bemhtml.js */
 oninit(function(exports, context) {
     var BEMContext = exports.BEMContext || context.BEMContext;
     // Provides third-party libraries from different modular systems

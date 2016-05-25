@@ -1373,32 +1373,6 @@ var init = function (global, BH) {
 
 // end: ../../touch.blocks/page/__icon/page__icon.bh.js
 }());
-(function () {
-// begin: ../../common.blocks/i-bem/__i18n/i-bem__i18n.bh.js
-
-    bh.match('i-bem__i18n', function(ctx, json) {
-        if(!json) return '';
-
-        var keyset = json.keyset,
-            key = json.key,
-            params = json.params || {};
-
-        if(!(keyset || key))
-            return '';
-
-        /**
-         * Consider `content` is a reserved param that contains
-         * valid bemjson data
-         */
-        if(typeof json.content === 'undefined' || json.content !== null) {
-            params.content = bh.apply(json.content);
-        }
-
-        return bh.lib.i18n(keyset, key, params);
-    });
-
-// end: ../../common.blocks/i-bem/__i18n/i-bem__i18n.bh.js
-}());
 };
 
 var defineAsGlobal = true;
