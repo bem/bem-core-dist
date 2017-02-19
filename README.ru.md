@@ -52,7 +52,7 @@
 <!-- write your code here -->
 <script src="dist/desktop/bem-core.no-autoinit.js+bemhtml.js"></script>
 <script>
-    modules.require('i-bem__dom_init', function(init) {
+    modules.require('i-bem-dom__init', function(init) {
         init();
     });
 </script>
