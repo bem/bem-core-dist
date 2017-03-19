@@ -550,6 +550,7 @@ function BH() {
 }
 
 BH.prototype = {
+    constructor: BH,
 
     /**
      * Задает опции шаблонизации.
@@ -1371,4 +1372,4 @@ if (defineAsGlobal) {
     global["bh"] = bh;
     global["BEMHTML"] = bh;
 }
-}(typeof window !== "undefined" ? window : global));
+}(typeof window !== "undefined" ? window : typeof global !== "undefined" ? global : this));

@@ -1726,6 +1726,20 @@ function getJqueryCollection(html) {
 }
 
 /**
+ * Validates block to be class or specified description
+ * @param {*} Block Any argument passed to find*Block as Block
+ * @throws {Error} Will throw an error if the Block argument isn't correct
+ */
+function validateBlockParam(Block) {
+    if(
+        typeof Block === 'string' ||
+        typeof Block === 'object' && typeof Block.block === 'string'
+    ) {
+        throw new Error('Block must be a class or description (block, modName, modVal) of the block to find');
+    }
+}
+
+/**
  * @class BemDomEntity
  * @description Base mix for BEM entities that have DOM representation
  */
@@ -1856,7 +1870,8 @@ var BemDomEntity = inherit(/** @lends BemDomEntity.prototype */{
      * @returns {Block}
      */
     findChildBlock : function(Block) {
-        // TODO: throw if Block passed as a string
+        validateBlockParam(Block);
+
         return this._findEntities('find', Block, true);
     },
 
@@ -1866,6 +1881,8 @@ var BemDomEntity = inherit(/** @lends BemDomEntity.prototype */{
      * @returns {BemDomCollection}
      */
     findChildBlocks : function(Block) {
+        validateBlockParam(Block);
+
         return this._findEntities('find', Block);
     },
 
@@ -1875,6 +1892,8 @@ var BemDomEntity = inherit(/** @lends BemDomEntity.prototype */{
      * @returns {Block}
      */
     findParentBlock : function(Block) {
+        validateBlockParam(Block);
+
         return this._findEntities('parents', Block, true);
     },
 
@@ -1884,6 +1903,8 @@ var BemDomEntity = inherit(/** @lends BemDomEntity.prototype */{
      * @returns {BemDomCollection}
      */
     findParentBlocks : function(Block) {
+        validateBlockParam(Block);
+
         return this._findEntities('parents', Block);
     },
 
@@ -1893,6 +1914,8 @@ var BemDomEntity = inherit(/** @lends BemDomEntity.prototype */{
      * @returns {Block}
      */
     findMixedBlock : function(Block) {
+        validateBlockParam(Block);
+
         return this._findEntities('filter', Block, true);
     },
 
@@ -1902,6 +1925,8 @@ var BemDomEntity = inherit(/** @lends BemDomEntity.prototype */{
      * @returns {BemDomCollection}
      */
     findMixedBlocks : function(Block) {
+        validateBlockParam(Block);
+
         return this._findEntities('filter', Block);
     },
 
@@ -4073,7 +4098,7 @@ var BemCollection = inherit(/** @lends BemCollection.prototype */{
                 arg instanceof BemCollection?  arg._entities : arg);
         }
 
-        return new BemCollection(arrayConcat.apply(this._entities, argsForConcat));
+        return new this.__self(arrayConcat.apply(this._entities, argsForConcat));
     },
 
     /**
