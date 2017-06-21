@@ -494,6 +494,20 @@ provide(/** @exports */{
 
 modules.define('dom', ['jquery'], function(provide, $) {
 
+var EDITABLE_INPUT_TYPES = {
+    'datetime-local' : true,
+    date : true,
+    month : true,
+    number : true,
+    password : true,
+    search : true,
+    tel : true,
+    text : true,
+    time : true,
+    url : true,
+    week : true
+};
+
 provide(/** @exports */{
     /**
      * Checks whether a DOM elem is in a context
@@ -574,8 +588,7 @@ provide(/** @exports */{
 
         switch(domNode.tagName.toLowerCase()) {
             case 'input':
-                var type = domNode.type;
-                return (type === 'text' || type === 'password') && !domNode.disabled && !domNode.readOnly;
+                return EDITABLE_INPUT_TYPES.hasOwnProperty(domNode.type) && !domNode.disabled && !domNode.readOnly;
 
             case 'textarea':
                 return !domNode.disabled && !domNode.readOnly;
@@ -784,7 +797,7 @@ var undef,
      */
     Event = inherit(/** @lends Event.prototype */{
         /**
-         * @constructor
+         * @constructs
          * @param {String} type
          * @param {Object} target
          */
@@ -1350,7 +1363,7 @@ modules.define(
  */
 var Observable = inherit(/** @lends Observable.prototype */{
     /**
-     * @constructor
+     * @constructs
      * @param {Object} emitter
      */
     __constructor : function(emitter) {
@@ -1513,14 +1526,12 @@ function initEntities(domElem, uniqInitId, dropElemCacheQueue) {
         elemName;
 
     for(entityName in params) {
-        if(dropElemCacheQueue) {
-            splitted = entityName.split(ELEM_DELIM);
-            blockName = splitted[0];
-            elemName = splitted[1];
-            elemName &&
-                ((dropElemCacheQueue[blockName] ||
-                    (dropElemCacheQueue[blockName] = {}))[elemName] = true);
-        }
+        splitted = entityName.split(ELEM_DELIM);
+        blockName = splitted[0];
+        elemName = splitted[1];
+        elemName &&
+            ((dropElemCacheQueue[blockName] ||
+                (dropElemCacheQueue[blockName] = {}))[elemName] = true);
 
         initEntity(
             entityName,
@@ -1631,13 +1642,13 @@ function getParams(domNode) {
 /**
  * Returns parameters of an entity extracted from DOM node
  * @param {HTMLElement} domNode DOM node
- * @param {String} blockName
+ * @param {String} entityName
  * @returns {Object}
  */
 
-function getEntityParams(domNode, blockName) {
+function getEntityParams(domNode, entityName) {
     var params = getParams(domNode);
-    return params[blockName] || (params[blockName] = {});
+    return params[entityName] || (params[entityName] = {});
 }
 
 /**
@@ -1690,8 +1701,6 @@ function dropElemCacheForCtx(ctx, dropElemCacheQueue) {
             }
         });
     });
-
-    dropElemCacheQueue = {};
 }
 
 /**
@@ -1745,7 +1754,7 @@ function validateBlockParam(Block) {
  */
 var BemDomEntity = inherit(/** @lends BemDomEntity.prototype */{
     /**
-     * @constructor
+     * @constructs
      * @private
      * @param {jQuery} domElem DOM element that the entity is created on
      * @param {Object} params parameters
@@ -2381,16 +2390,17 @@ bemDom = /** @exports */{
             $(ctx) :
             ctx || bemDom.scope;
 
-        var dropElemCacheQueue = ctx === bemDom.scope? {} : undef,
+        var dropElemCacheQueue = {},
             uniqInitId = identify();
 
+        // NOTE: we find only js-entities, so cahced elems without js can't be dropped from cache
         findDomElem(ctx, BEM_SELECTOR).each(function() {
             initEntities($(this), uniqInitId, dropElemCacheQueue);
         });
 
         bem._runInitFns();
 
-        dropElemCacheQueue && dropElemCacheForCtx(ctx, dropElemCacheQueue);
+        dropElemCacheForCtx(ctx, dropElemCacheQueue);
 
         return ctx;
     },
@@ -2767,7 +2777,7 @@ function declEntity(baseCls, entityName, base, props, staticProps) {
  */
 var BemEntity = inherit(/** @lends BemEntity.prototype */ {
     /**
-     * @constructor
+     * @constructs
      * @private
      * @param {Object} mods BemEntity modifiers
      * @param {Object} params BemEntity parameters
@@ -3490,7 +3500,7 @@ var undef,
      */
     EventManager = inherit(/** @lends EventManager.prototype */{
         /**
-         * @constructor
+         * @constructs
          * @param {Object} params EventManager parameters
          * @param {Function} fnWrapper Wrapper function to build event handler
          * @param {Function} eventBuilder Function to build event
@@ -3627,7 +3637,7 @@ var undef,
      */
     CollectionEventManager = inherit(/** @lends CollectionEventManager.prototype */{
         /**
-         * @constructor
+         * @constructs
          * @param {Array} eventManagers Array of event managers
          */
         __constructor : function(eventManagers) {
@@ -3927,7 +3937,7 @@ modules.define('i-bem__collection', ['inherit'], function(provide, inherit) {
  */
 var BemCollection = inherit(/** @lends BemCollection.prototype */{
     /**
-     * @constructor
+     * @constructs
      * @param {Array} entities BEM entities
      */
     __constructor : function(entities) {
@@ -4393,7 +4403,7 @@ var IDLE_TIMEOUT = 3000,
      */
     Idle = inherit(events.Emitter, /** @lends Idle.prototype */{
         /**
-         * @constructor
+         * @constructs
          */
         __constructor : function() {
             this._timer = null;
@@ -5631,7 +5641,7 @@ var TICK_INTERVAL = 50,
      */
     Tick = inherit(events.Emitter, /** @lends Tick.prototype */{
         /**
-         * @constructor
+         * @constructs
          */
         __constructor : function() {
             this._timer = null;
@@ -5997,7 +6007,7 @@ var undef,
  */
 
 /**
- * @constructor
+ * @constructs vow:Deferred
  * @description
  * You can use `vow.defer()` instead of using this constructor.
  *
@@ -6112,7 +6122,7 @@ var PROMISE_STATUS = {
  */
 
 /**
- * @constructor
+ * @constructs vow:Promise
  * @param {Function} resolver See https://github.com/domenic/promises-unwrapping/blob/master/README.md#the-promise-constructor for details.
  * @description
  * You should use this constructor directly only if you are going to use `vow` as DOM Promises implementation.
@@ -7356,7 +7366,7 @@ var eventBuilder = function(e) {
 
                     if(instance) {
                         params.bindEntityCls && (e.bemTarget = $(this).bem(params.bindEntityCls));
-                        fn.call(instance, e);
+                        fn.apply(instance, arguments);
                     }
                 };
             }
